@@ -1,0 +1,7 @@
+[package]
+name = "urdma-provider"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ffi = { path = "../urdma-ibverbs-binding", package = "urdma-ibverbs-binding", version = "0.1.0" }

@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: GPL-2.0-only
+config RDMA_USERSPACE
+	tristate "User space RDMA driver"
+	depends on INFINIBAND_USER_ACCESS
+	help
+    This driver implements dummy device for user space program.

@@ -42,8 +42,8 @@ static void urdma_dealloc_ucontext(struct ib_ucontext *ibuc)
 	pr_info("urdma dealloc ucontext\n");
 }
 
-int urdma_query_gid(struct ib_device *ibdev, u32 port_num, int index,
-		    union ib_gid *gid)
+static int urdma_query_gid(struct ib_device *ibdev, u32 port_num, int index,
+			   union ib_gid *gid)
 {
 	struct urdma_dev *urdma = to_udev(ibdev);
 	memcpy(gid, &urdma->gid, sizeof(*gid));
@@ -218,7 +218,6 @@ static struct urdma_dev *urdma_alloc_device(const int id)
 
 	urdma->id = id;
 	pr_info("alloc for id: %d\n", id);
-	ib_device_put(&urdma->ibdev);
 	return urdma;
 }
 
@@ -236,7 +235,7 @@ static int __init urdma_init_module(void)
 	int err;
 	int i;
 
-	pr_info("urdma module loaded\n");
+	pr_info("urdma module loading\n");
 
 	err = request_module("ib_uverbs");
 	if (err) {
@@ -248,20 +247,23 @@ static int __init urdma_init_module(void)
 		urdma_devs[i] = urdma_alloc_device(i);
 		if (!urdma_devs[i]) {
 			err = -ENOMEM;
-			goto err_dealloc;
+			goto err_clean;
 		}
 
 		err = urdma_register_device(urdma_devs[i]);
 		if (err) {
 			urdma_dealloc_device(urdma_devs[i]);
-			goto err_dealloc;
+			urdma_devs[i] = NULL;
+			goto err_clean;
 		}
 	}
 
+	pr_info("urdma module load success\n");
 	return 0;
 
-err_dealloc:
+err_clean:
 	while (--i) {
+		ib_unregister_device(&urdma_devs[i]->ibdev);
 		urdma_dealloc_device(urdma_devs[i]);
 		urdma_devs[i] = NULL;
 	}
@@ -274,9 +276,12 @@ static void __exit urdma_exit_module(void)
 	pr_info("urdma module unloaded\n");
 
 	for (i = 0; i < NUM_DEV; i++) {
-		if (!urdma_devs[i]) {
+		if (urdma_devs[i]) {
+			ib_unregister_device(&urdma_devs[i]->ibdev);
 			urdma_dealloc_device(urdma_devs[i]);
 			urdma_devs[i] = NULL;
+		} else {
+			pr_err("exit module with NULL device on %d\n", i);
 		}
 	}
 }

@@ -1,28 +1,27 @@
 use std::sync::Arc;
 
-use crate::{Provider, Result};
+use provider::Result;
+
+use super::rxe::Rxe;
+use crate::urdma::urdma_device;
 
 const RXE_DEVICE_NAME: &str = "rxe";
 
-struct Rxe {
-    rxe_context: *mut ffi::ibv_context,
-}
-
-impl Drop for Rxe {
-    fn drop(&mut self) {
-        unsafe { ffi::ibv_close_device(self.rxe_context) };
-    }
-}
-
-impl Provider for Rxe {
-    type Driver = Rxe;
-
+impl provider::Provider for Rxe {
     fn init() -> Result {
         let _ = env_logger::try_init();
         Ok(())
     }
 
-    fn new(sysfs_name: &str) -> Result<Arc<Self::Driver>> {
+    unsafe fn from_ibv_device(ibdev: *mut ffi::ibv_device) -> *const Self {
+        let ptr = ibdev.cast::<u8>().cast_const();
+        let offset: usize = core::mem::offset_of!(urdma_device, verbs_dev);
+        let urdma = unsafe { ptr.sub(offset) }.cast::<urdma_device>();
+        let urdma = unsafe { urdma.as_ref() }.unwrap();
+        urdma.driver_data.cast_const().cast()
+    }
+
+    fn new(sysfs_name: &str) -> Result<Arc<Self>> {
         log::info!("Creating new RDMA device with sysfs name: {sysfs_name}");
 
         let mut num_devices = 0;

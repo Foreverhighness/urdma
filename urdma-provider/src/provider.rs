@@ -3,18 +3,22 @@ use std::sync::Arc;
 use super::Result;
 
 /// verbs provider
-pub trait Provider {
-    /// Sized because we do not want store a fat pointer
-    /// 'static because it will be stored in C side
-    type Driver: Sized + 'static;
-
+///
+/// Sized because we do not want store a fat pointer
+/// 'static because it will be stored in C side
+pub trait Provider: Sized + 'static {
     /// init context
     ///
     /// guarantee to be called only once
     fn init(/* TODO(fh): args? */) -> Result;
 
+    /// Get from ibv_device
+    ///
+    /// Safety: Caller must ensure `ibdev` is point to a valid container of provider.
+    unsafe fn from_ibv_device(ibdev: *mut ffi::ibv_device) -> *const Self;
+
     /// new driver
-    fn new(_sysfs_name: &str) -> Result<Arc<Self::Driver>>;
+    fn new(_sysfs_name: &str) -> Result<Arc<Self>>;
 
     /// alloc pd
     fn alloc_pd(&self) -> *mut ffi::ibv_pd {

@@ -1,9 +1,6 @@
-use core::ptr::NonNull;
 use std::sync::Arc;
 
-pub struct VerbsError;
-
-type Result<T = ()> = core::result::Result<T, VerbsError>;
+use super::Result;
 
 /// verbs provider
 pub trait Provider {
@@ -14,18 +11,18 @@ pub trait Provider {
     /// init context
     ///
     /// guarantee to be called only once
-    fn init();
+    fn init(/* TODO(fh): args? */) -> Result;
 
     /// new driver
-    fn new() -> Arc<Self::Driver>;
+    fn new(_sysfs_name: &str) -> Result<Arc<Self::Driver>>;
 
     /// alloc pd
-    fn alloc_pd(&self) -> NonNull<ffi::ibv_pd> {
+    fn alloc_pd(&self) -> *mut ffi::ibv_pd {
         unimplemented!()
     }
 
     /// dealloc pd
-    fn dealloc_pd(&self, _pd: NonNull<ffi::ibv_pd>) -> Result {
+    fn dealloc_pd(&self, _pd: *mut ffi::ibv_pd) -> Result {
         unimplemented!()
     }
 
@@ -33,7 +30,7 @@ pub trait Provider {
     /// query device
     fn query_device(
         &self,
-        _input: Option<&ffi::ibv_query_device_ex_input>,
+        _input: *const ffi::ibv_query_device_ex_input,
         _device_attr: *mut ffi::ibv_device_attr,
         _attr_size: usize,
     ) -> Result {
@@ -48,61 +45,83 @@ pub trait Provider {
     // TODO(fh): wrap pointers
     fn create_cq(
         &self,
-        cqe: core::ffi::c_int,
-        channel: *mut ffi::ibv_comp_channel,
-        comp_vector: core::ffi::c_int,
+        _cqe: core::ffi::c_int,
+        _channel: *mut ffi::ibv_comp_channel,
+        _comp_vector: core::ffi::c_int,
     ) -> *mut ffi::ibv_cq {
         unimplemented!()
     }
 
-    fn destroy_cq(cq: *mut ffi::ibv_cq) -> Result {
+    // TODO(fh): API design
+    fn destroy_cq(&self, _cq: *mut ffi::ibv_cq) -> Result {
         unimplemented!()
     }
 
-    fn create_qp(pd: *mut ffi::ibv_pd, init_attr: *mut ffi::ibv_qp_init_attr) -> *mut ffi::ibv_qp {
+    // TODO(fh): API design
+    fn create_qp(&self, _pd: *mut ffi::ibv_pd, _init_attr: *mut ffi::ibv_qp_init_attr) -> *mut ffi::ibv_qp {
         unimplemented!()
     }
 
-    fn destroy_qp(qp: *mut ffi::ibv_qp) -> Result {
+    // TODO(fh): API design
+    fn destroy_qp(&self, _qp: *mut ffi::ibv_qp) -> Result {
         unimplemented!()
     }
 
-    fn modify_qp(qp: *mut ffi::ibv_qp, attr: *mut ffi::ibv_qp_attr, attr_mask: core::ffi::c_int) -> Result {
+    // TODO(fh): API design
+    fn modify_qp(&self, _qp: *mut ffi::ibv_qp, _attr: *mut ffi::ibv_qp_attr, _attr_mask: core::ffi::c_int) -> Result {
         unimplemented!()
     }
 
+    // TODO(fh): API design
     fn query_qp(
-        qp: *mut ffi::ibv_qp,
-        attr: *mut ffi::ibv_qp_attr,
-        attr_mask: core::ffi::c_int,
-        init_attr: *mut ffi::ibv_qp_init_attr,
+        &self,
+        _qp: *mut ffi::ibv_qp,
+        _attr: *mut ffi::ibv_qp_attr,
+        _attr_mask: core::ffi::c_int,
+        _init_attr: *mut ffi::ibv_qp_init_attr,
     ) -> Result {
         unimplemented!()
     }
 
+    // TODO(fh): API design
     fn reg_mr(
-        pd: *mut ffi::ibv_pd,
-        addr: *mut ::std::os::raw::c_void,
-        length: usize,
+        &self,
+        _pd: *mut ffi::ibv_pd,
+        _addr: *mut ::std::os::raw::c_void,
+        _length: usize,
         _hca_va: u64,
-        access: core::ffi::c_int,
+        _access: core::ffi::c_int,
     ) -> *mut ffi::ibv_mr {
         unimplemented!()
     }
 
-    fn dereg_mr(mr: *mut ffi::ibv_mr) -> Result {
+    // TODO(fh): API design
+    fn dereg_mr(&self, _mr: *mut ffi::ibv_mr) -> Result {
         unimplemented!()
     }
 
-    fn post_send(qp: *mut ffi::ibv_qp, wr: *mut ffi::ibv_send_wr, bad_wr: *mut *mut ffi::ibv_send_wr) -> Result {
+    // TODO(fh): API design
+    fn post_send(
+        &self,
+        _qp: *mut ffi::ibv_qp,
+        _wr: *mut ffi::ibv_send_wr,
+        _bad_wr: *mut *mut ffi::ibv_send_wr,
+    ) -> Result {
         unimplemented!()
     }
 
-    fn post_recv(qp: *mut ffi::ibv_qp, wr: *mut ffi::ibv_recv_wr, bad_wr: *mut *mut ffi::ibv_recv_wr) -> Result {
+    // TODO(fh): API design
+    fn post_recv(
+        &self,
+        _qp: *mut ffi::ibv_qp,
+        _wr: *mut ffi::ibv_recv_wr,
+        _bad_wr: *mut *mut ffi::ibv_recv_wr,
+    ) -> Result {
         unimplemented!()
     }
 
-    fn poll_cq(cq: *mut ffi::ibv_cq, num_entries: i32, wc: *mut ffi::ibv_wc) -> i32 {
+    // TODO(fh): API design
+    fn poll_cq(&self, _cq: *mut ffi::ibv_cq, _num_entries: ::std::os::raw::c_int, _wc: *mut ffi::ibv_wc) -> Result {
         unimplemented!()
     }
 }

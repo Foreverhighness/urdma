@@ -48,9 +48,11 @@ fn main() {
     eprintln!("run bindgen");
     let bindings = bindgen::Builder::default()
         .header(format!("{rdma_core_dir}/libibverbs/verbs.h"))
-        .clang_arg(format!("-I{built_in}/include/"))
+        .header(format!("{rdma_core_dir}/libibverbs/driver.h"))
+        .clang_arg(format!("-I{built_in}/build/include/"))
         .allowlist_function("ibv_.*")
         .allowlist_type("ibv_.*")
+        .allowlist_type("verbs_.*")
         .allowlist_var("IBV_LINK_LAYER_.*")
         .bitfield_enum("ibv_access_flags")
         .bitfield_enum("ibv_qp_attr_mask")
